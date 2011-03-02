@@ -197,6 +197,7 @@ module Netzke
         res = %w{ add edit apply del }.map(&:to_sym).map(&:action)
         res << "-" << :add_in_form.action << :edit_in_form.action if config[:enable_edit_in_form]
         res << "-" << :search.action if config[:enable_extended_search]
+        res << "-" << :export.action if config[:enable_export]
         res
       end
 
@@ -283,6 +284,14 @@ module Netzke
           :tooltip => I18n.t('netzke.basepack.grid_panel.actions.search'),
           :enable_toggle => true,
           :icon => :find
+        }
+      end
+      
+      action :export do
+        {
+          :text => I18n.t('netzke.basepack.grid_panel.actions.export'),
+          :tooltip => I18n.t('netzke.basepack.grid_panel.actions.export'),
+          :icon => :page_excel
         }
       end
 

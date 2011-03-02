@@ -10,6 +10,7 @@ en:
           add_in_form: Add in form
           edit_in_form: Edit in form
           search: Search
+          export: Export
 
         deleted_n_records: "Deleted %{n} record(s)"
         cannot_delete: "You don't have permissions to delete data"

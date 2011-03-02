@@ -1,6 +1,7 @@
 require 'active_record'
 require 'meta_where'
 require 'will_paginate'
+require 'spreadsheet'
 
 module Netzke
   module Basepack
@@ -12,6 +13,13 @@ module Netzke
 
           endpoint :get_data do |params|
             get_data(params)
+          end
+
+          endpoint :export_data do |params|
+            data = get_data({:with_last_params => true})
+            name = data_class.to_s.pluralize
+            headers = columns.map{ |column| column[:name].humanize }
+            { :name => name, :data => data[:data], :headers => headers }
           end
 
           endpoint :post_data do |params|
