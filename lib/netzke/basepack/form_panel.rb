@@ -71,15 +71,16 @@ module Netzke
         c[:bbar] = [:apply.action] if c[:bbar].nil?
       end
 
-      # Extra javascripts
+      # Extra JavaScripts and stylesheets
       js_mixin :form_panel
       js_include :comma_list_cbg
-      js_include :n_radio_group, :display_mode, :readonly_mode
-      # Netzke::Base.config[:ext_location] + "/examples/ux/fileuploadfield/FileUploadField.js",
-      # "#{File.dirname(__FILE__)}/form_panel/javascripts/netzkefileupload.js"
-
-      # Extra CSS
+      js_include :n_radio_group, :readonly_mode
       css_include :readonly_mode
+
+      js_include Netzke::Core.ext_location.join("examples/ux/fileuploadfield/FileUploadField.js")
+      css_include Netzke::Core.ext_location.join("examples/ux/fileuploadfield/css/fileuploadfield.css")
+
+      js_include :misc
 
       def js_config
         super.tap do |res|

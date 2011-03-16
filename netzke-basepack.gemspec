@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{netzke-basepack}
-  s.version = "0.6.4"
+  s.version = "0.6.5"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Sergei Kozlov"]
-  s.date = %q{2011-02-26}
+  s.date = %q{2011-03-15}
   s.description = %q{A set of full-featured extendible Netzke components (such as FormPanel, GridPanel, Window, BorderLayoutPanel, etc) which can be used as building block for your RIA}
   s.email = %q{sergei@playcode.nl}
   s.extra_rdoc_files = [
@@ -56,6 +56,7 @@ Gem::Specification.new do |s|
     "install.rb",
     "javascripts/basepack.js",
     "javascripts/datetimefield.js",
+    "javascripts/feedback_ghost.js",
     "lib/generators/netzke/basepack_generator.rb",
     "lib/generators/netzke/templates/assets/ts-checkbox.gif",
     "lib/generators/netzke/templates/create_netzke_field_lists.rb",
@@ -73,10 +74,9 @@ Gem::Specification.new do |s|
     "lib/netzke/basepack/form_panel.rb",
     "lib/netzke/basepack/form_panel/fields.rb",
     "lib/netzke/basepack/form_panel/javascripts/comma_list_cbg.js",
-    "lib/netzke/basepack/form_panel/javascripts/display_mode.js",
     "lib/netzke/basepack/form_panel/javascripts/form_panel.js",
+    "lib/netzke/basepack/form_panel/javascripts/misc.js",
     "lib/netzke/basepack/form_panel/javascripts/n_radio_group.js",
-    "lib/netzke/basepack/form_panel/javascripts/netzkefileupload.js",
     "lib/netzke/basepack/form_panel/javascripts/readonly_mode.js",
     "lib/netzke/basepack/form_panel/services.rb",
     "lib/netzke/basepack/form_panel/stylesheets/readonly_mode.css",
@@ -141,6 +141,7 @@ Gem::Specification.new do |s|
     "test/rails_app/app/components/book_grid_with_custom_columns.rb",
     "test/rails_app/app/components/book_grid_with_default_values.rb",
     "test/rails_app/app/components/book_grid_with_nested_attributes.rb",
+    "test/rails_app/app/components/book_grid_with_scoped_authors.rb",
     "test/rails_app/app/components/book_grid_with_virtual_attributes.rb",
     "test/rails_app/app/components/book_paging_form_panel.rb",
     "test/rails_app/app/components/book_presentation.rb",
@@ -284,6 +285,7 @@ Gem::Specification.new do |s|
     "test/rails_app/app/components/book_grid_with_custom_columns.rb",
     "test/rails_app/app/components/book_grid_with_default_values.rb",
     "test/rails_app/app/components/book_grid_with_nested_attributes.rb",
+    "test/rails_app/app/components/book_grid_with_scoped_authors.rb",
     "test/rails_app/app/components/book_grid_with_virtual_attributes.rb",
     "test/rails_app/app/components/book_paging_form_panel.rb",
     "test/rails_app/app/components/book_presentation.rb",
@@ -368,18 +370,18 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<netzke-core>, ["~> 0.6.4"])
+      s.add_runtime_dependency(%q<netzke-core>, ["~> 0.6.7"])
       s.add_runtime_dependency(%q<meta_where>, [">= 0.9.3"])
       s.add_runtime_dependency(%q<will_paginate>, ["~> 3.0.pre2"])
       s.add_runtime_dependency(%q<acts_as_list>, [">= 0"])
     else
-      s.add_dependency(%q<netzke-core>, ["~> 0.6.4"])
+      s.add_dependency(%q<netzke-core>, ["~> 0.6.7"])
       s.add_dependency(%q<meta_where>, [">= 0.9.3"])
       s.add_dependency(%q<will_paginate>, ["~> 3.0.pre2"])
       s.add_dependency(%q<acts_as_list>, [">= 0"])
     end
   else
-    s.add_dependency(%q<netzke-core>, ["~> 0.6.4"])
+    s.add_dependency(%q<netzke-core>, ["~> 0.6.7"])
     s.add_dependency(%q<meta_where>, [">= 0.9.3"])
     s.add_dependency(%q<will_paginate>, ["~> 3.0.pre2"])
     s.add_dependency(%q<acts_as_list>, [">= 0"])

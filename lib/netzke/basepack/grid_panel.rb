@@ -42,11 +42,11 @@ module Netzke
     # * +enable_context_menu+ - (defaults to true) enable rows context menu
     # * +enable_rows_reordering+ - (defaults to false) enable reordering of rows with drag-n-drop; underlying model (specified in +model+) must implement "acts_as_list"-compatible functionality
     # * +enable_pagination+ - (defaults to true) enable pagination
-    # * +rows_per_page+ - (defaults to 30) number of rows per page (ignored when +enable_pagination+ is set to <tt>false+)
+    # * +rows_per_page+ - (defaults to 30) number of rows per page (ignored when +enable_pagination+ is set to +false+)
     # * +load_inline_data+ - (defaults to true) load initial data into the grid right after its instantiation
     # * (TODO) +mode+ - when set to +config+, GridPanel loads in configuration mode
-    # * +add/edit/multi_edit/search_form_config+ - additional configuration for add/edit/multi_edit/search form panel
-    # * +add/edit/multi_edit_form_window_config+ - additional configuration for the window that wrapps up add/edit/multi_edit form panel
+    # * <tt>[add|edit|multi_edit]_search_form_config</tt> - additional configuration for add/edit/multi_edit/search form panel
+    # * <tt>[add|edit|multi_edit]_form_window_config</tt> - additional configuration for the window that wrapps up add/edit/multi_edit form panel
     #
     # == Columns
     # Columns are configured by passing an array to the +columns+ option. Each element in the array is either the name of model's (virtual) attribute (in which case the configuration will be fully automatic), or a hash that may contain the following configuration options as keys:
@@ -58,10 +58,11 @@ module Netzke
     # * +getter+ - a lambda that receives a record as a parameter, and is expected to return a string that will be sent to the cell (can be HTML code), e.g.:
     #
     #     :getter => lambda {|r| [r.first_name, r.last_name].join }
-
     # * +setter+ - a lambda that receives a record as first parameter, and the value passed from the cell as the second parameter, and is expected to modify the record accordingly, e.g.:
     #
     #     :setter => lambda { |r,v| r.first_name, r.last_name = v.split(" ") }
+    #
+    # * +scope+ - the scope for one-to-many association column. Same syntax applies as for scoping out records for the grid itself. See "One-to-many association support" for details.
     #
     # * +sorting_scope+ - the name of the scope used for sorting the column. This can be useful for virtual columns for example. The scope will get one parameter specifying the direction (:asc or :desc). Example:
     #
@@ -74,6 +75,17 @@ module Netzke
     #     end
     #
     # Besides these options, a column can receive any meaningful config option understood by Ext.grid.Column (http://dev.sencha.com/deploy/dev/docs/?class=Ext.grid.Column)
+    #
+    # == One-to-many association support
+    # If the model bound to a grid +belongs_to+ another model, GridPanel can display an "assocition column" - where the user can select the associated record from a drop-down box. You can specify which method of the association should be used as the display value for the drop-down box options by using the double-underscore notation on the column name, where the association name is separated from the association method by "__" (double underscore). For example, let's say we have a Book that +belongs_to+ model Author, and Author responds to +first_name+. This way, the book grid can have a column defined as follows:
+    #
+    #     {:name => "author__first_name"}
+    #
+    # GridPanel will detect it to be an association column, and will use the drop-down box for selecting an author, where the list of authors will be represented by the author's first name.
+    #
+    # In order to scope out the records displayed in the drop-down box, the +scope+ column option can be used, e.g.:
+    #
+    #     {:name => "author__first_name", :scope => lambda{|relation| relation.where(:popular => true)}}
     #
     # == Actions
     # You can override GridPanel's actions to change their text, icons, and tooltips (see http://api.netzke.org/core/Netzke/Actions.html).
@@ -101,7 +113,7 @@ module Netzke
     #
     # The following class configuration options are available:
     # * +column_filters_available+ - (defaults to true) include code for the filters in the column's context menu
-    # * (TODO)+config_tool_available+ - (defaults to true) include code for the configuration tool that launches the configuration panel
+    # * (TODO) +config_tool_available+ - (defaults to true) include code for the configuration tool that launches the configuration panel
     # * +edit_in_form_available+ - (defaults to true) include code for (multi-record) editing and adding records through a form
     # * +extended_search_available+ - (defaults to true) include code for extended configurable search
     class GridPanel < Netzke::Base
@@ -166,25 +178,25 @@ module Netzke
         js_include(ex.join("#{File.dirname(__FILE__)}/grid_panel/javascripts/rows-dd.js"))
       end
 
-      def js_config
+      def js_config #:nodoc:
         super.merge({
           :bbar => config.has_key?(:bbar) ? config[:bbar] : default_bbar,
           :context_menu => config.has_key?(:context_menu) ? config[:context_menu] : default_context_menu,
           :columns => columns(:with_meta => true), # columns
-          :columns_order => config[:persistence] && state[:columns_order] || initial_columns_order,
+          :columns_order => columns_order,
           :model => config[:model], # the model name
           :inline_data => (get_data if config[:load_inline_data]), # inline data (loaded along with the grid panel)
           :pri => data_class.primary_key # table primary key name
         })
       end
 
-      def get_association_values(record)
+      def get_association_values(record) #:nodoc:
         columns.select{ |c| c[:name].index("__") }.each.inject({}) do |r,c|
           r.merge(c[:name] => record.value_for_attribute(c, true))
         end
       end
 
-      def get_default_association_values
+      def get_default_association_values #:nodoc:
         columns.select{ |c| c[:name].index("__") && c[:default_value] }.each.inject({}) do |r,c|
           assoc, assoc_method = assoc_and_assoc_method_for_column(c)
           assoc_instance = assoc.klass.find(c[:default_value])
@@ -193,6 +205,7 @@ module Netzke
       end
       memoize :get_default_association_values
 
+      # Override to change the default bottom toolbar
       def default_bbar
         res = %w{ add edit apply del }.map(&:to_sym).map(&:action)
         res << "-" << :add_in_form.action << :edit_in_form.action if config[:enable_edit_in_form]
@@ -201,29 +214,30 @@ module Netzke
         res
       end
 
+      # Override to change the default context menu
       def default_context_menu
         res = %w{ edit del }.map(&:to_sym).map(&:action)
         res << "-" << :edit_in_form.action if config[:enable_edit_in_form]
         res
       end
 
-      def configuration_components
-        res = []
-        res << {
-          :persistent_config => true,
-          :name              => 'columns',
-          :class_name        => "FieldsConfigurator",
-          :active            => true,
-          :owner             => self
-        }
-        res << {
-          :name               => 'general',
-          :class_name  => "PropertyEditor",
-          :component             => self,
-          :title => false
-        }
-        res
-      end
+      # def configuration_components
+      #   res = []
+      #   res << {
+      #     :persistent_config => true,
+      #     :name              => 'columns',
+      #     :class_name        => "FieldsConfigurator",
+      #     :active            => true,
+      #     :owner             => self
+      #   }
+      #   res << {
+      #     :name               => 'general',
+      #     :class_name  => "PropertyEditor",
+      #     :component             => self,
+      #     :title => false
+      #   }
+      #   res
+      # end
 
       action :add do
         {
