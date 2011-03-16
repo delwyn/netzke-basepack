@@ -1,7 +1,7 @@
 require 'active_record'
 require 'meta_where'
 require 'will_paginate'
-require 'spreadsheet'
+require "csv"
 
 module Netzke
   module Basepack
@@ -16,10 +16,16 @@ module Netzke
           end
 
           endpoint :export_data do |params|
-            data = get_data({:with_last_params => true})
-            name = data_class.to_s.pluralize
-            headers = columns.map{ |column| column[:name].humanize }
-            { :name => name, :data => data[:data], :headers => headers }
+            if !config[:prohibit_read]
+              records = get_records({:with_last_params => true})
+              csv_string = CSV.generate do |csv|
+                csv << columns.map{ |column| column[:label].titleize }
+                records.each do |record|
+                  csv << columns.map{ |column| record.value_for_attribute(column, true)}
+                end
+              end
+            end
+            {:filename => data_class.to_s.pluralize, :data => csv_string}
           end
 
           endpoint :post_data do |params|
